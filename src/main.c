@@ -5,23 +5,23 @@
  */
 
 #include <zephyr/sys/printk.h>
-#include <stdlib.h>
 #include <zephyr/kernel.h>
-
-#include <zephyr/shell/shell.h>
-
 #include <zephyr/bluetooth/bluetooth.h>
-#include <zephyr/bluetooth/mesh.h>
-#include <zephyr/bluetooth/mesh/shell.h>
-
-#include "model_handler.h"
-
-//additional includes
-#include <zephyr/bluetooth/mesh/proxy.h>
 #include <bluetooth/mesh/models.h>
+#include <bluetooth/mesh/dk_prov.h>
 #include <dk_buttons_and_leds.h>
+#include <zephyr/shell/shell.h>
+#include <zephyr/bluetooth/mesh/shell.h>
+#include "model_handler.h"
+#include "smp_bt.h"
 
-static struct bt_mesh_cfg_cli cfg_cli;
+/*ADDED INCLUDES*/
+#include <zephyr/settings/settings.h>
+
+#if defined(CONFIG_SETTINGS)
+#include <zephyr/settings/settings.h>
+#endif
+
 
 
 #if defined(CONFIG_BT_MESH_DFD_SRV)
@@ -52,7 +52,6 @@ struct bt_mesh_large_comp_data_cli large_comp_data_cli;
 #if defined(CONFIG_BT_MESH_BRG_CFG_CLI)
 static struct bt_mesh_brg_cfg_cli brg_cfg_cli;
 #endif
-
 
 
 static void bt_ready(int err)

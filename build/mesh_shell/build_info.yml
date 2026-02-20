@@ -20,6 +20,7 @@ cmake:
      - 'C:/ncs/v3.2.1/nrf/dts/riscv'
      - 'C:/ncs/v3.2.1/nrf/dts/arm'
      - 'C:/ncs/v3.2.1/nrf/dts'
+     - 'C:/myfw/mesh_shell/include'
      - 'C:/ncs/v3.2.1/zephyr/include'
      - 'C:/ncs/v3.2.1/zephyr/include/zephyr'
      - 'C:/ncs/v3.2.1/zephyr/dts/common'
