@@ -11,6 +11,7 @@
 #include <bluetooth/mesh/dk_prov.h>
 #include <dk_buttons_and_leds.h>
 #include <zephyr/shell/shell.h>
+#include <zephyr/shell/shell_uart.h>
 #include <zephyr/bluetooth/mesh/shell.h>
 #include "model_handler.h"
 #include "smp_bt.h"
@@ -70,11 +71,10 @@ static void bt_ready(int err)
 		return;
 	}
 
+
 	if (IS_ENABLED(CONFIG_SETTINGS)) {
 		settings_load();
 	}
-
-	printk("Mesh initialized\n");
 
 	if (bt_mesh_is_provisioned()) {
 		printk("Mesh network restored from flash\n");
@@ -96,7 +96,15 @@ int main(void)
 		printk("Bluetooth init failed (err %d)\n", err);
 	}
 
-	printk("Press the <Tab> button for supported commands.\n");
-	printk("Before any Mesh commands you must run \"mesh init\"\n");
+	const struct shell *sh = shell_backend_uart_get_ptr();
+    if (sh) {
+        shell_execute_cmd(sh, "mesh init");
+		printk("Mesh initialized\n");
+    }else {
+		printk("Failed to get shell instance\n");
+	}
+
+	//printk("Press the <Tab> button for supported commands.\n");
+	//printk("Before any Mesh commands you must run \"mesh init\"\n");
 	return 0;
 }
