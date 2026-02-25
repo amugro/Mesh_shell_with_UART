@@ -96,15 +96,28 @@ int main(void)
 		printk("Bluetooth init failed (err %d)\n", err);
 	}
 
+	// Wait for shell to be fully initialized
+	k_sleep(K_SECONDS(2));
+
 	const struct shell *sh = shell_backend_uart_get_ptr();
-    if (sh) {
-        shell_execute_cmd(sh, "mesh init");
-		printk("Mesh initialized\n");
-    }else {
+	if (sh) {
+		printk("Executing shell command...\n");
+		err = shell_execute_cmd(sh, "mesh nit");  // Intentional typo to test error
+		printk("shell_execute_cmd returned: %d\n", err);
+		
+		// Give shell time to process and display the error
+		k_sleep(K_MSEC(500));
+	} else {
 		printk("Failed to get shell instance\n");
 	}
 
-	//printk("Press the <Tab> button for supported commands.\n");
-	//printk("Before any Mesh commands you must run \"mesh init\"\n");
+	printk("Press the <Tab> button for supported commands.\n");
+	printk("Before any Mesh commands you must run \"mesh init\"\n");
+	
+	// Keep main thread alive (don't return)
+	while (1) {
+		k_sleep(K_FOREVER);
+	}
+	
 	return 0;
 }
