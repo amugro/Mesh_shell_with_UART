@@ -1,0 +1,7 @@
+default: mesh_shell
+build_dir: C:/myfw/mesh_shell/build
+domains:
+  - name: mesh_shell
+    build_dir: C:/myfw/mesh_shell/build/mesh_shell
+flash_order:
+  - mesh_shell

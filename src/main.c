@@ -12,6 +12,7 @@
 #include <dk_buttons_and_leds.h>
 #include <zephyr/shell/shell.h>
 #include <zephyr/shell/shell_uart.h>
+#include <zephyr/shell/shell_dummy.h>
 #include <zephyr/bluetooth/mesh/shell.h>
 #include "model_handler.h"
 #include "smp_bt.h"
@@ -65,6 +66,18 @@ static K_SEM_DEFINE(cmd_sem, 0, 1);
 
 static const struct device *uart_dev;
 
+/* Send string over UART30 */
+static void uart30_send(const char *data, size_t len)
+{
+	if (!uart_dev || !device_is_ready(uart_dev)) {
+		return;
+	}
+	for (size_t i = 0; i < len; i++) {
+		uart_poll_out(uart_dev, data[i]);
+	}
+}
+
+
 static void uart_isr(const struct device *dev, void *user_data)
 {
 	uint8_t c;
@@ -79,7 +92,7 @@ static void uart_isr(const struct device *dev, void *user_data)
 
 	/* Read characters */
 	while (uart_fifo_read(dev, &c, 1) == 1) {
-		printk("RX: 0x%02X ('%c')\n", c, (c >= 32 && c < 127) ? c : '.');  // Debug print
+		//printk("RX: 0x%02X ('%c')\n", c, (c >= 32 && c < 127) ? c : '.');  // Debug print
 		if (c == '\r' || c == '\n') {
 			if (cmd_buffer_pos > 0) {
 				/* Null-terminate the command */
@@ -103,8 +116,16 @@ static void uart_isr(const struct device *dev, void *user_data)
 
 static void cmd_executor_thread(void)
 {
-	const struct shell *sh = shell_backend_uart_get_ptr();
+	const struct shell *sh = shell_backend_dummy_get_ptr();
 	char local_cmd[CMD_BUFFER_SIZE];
+	size_t output_size;
+	const char *output;
+	int ret;
+	
+	/* Wait for shell to be ready */
+	k_sleep(K_SECONDS(2));
+	
+	printk("cmd_executor_thread: dummy shell ptr = %p\n", sh);
 	
 	while (1) {
 		/* Wait for a command to be received */
@@ -119,11 +140,31 @@ static void cmd_executor_thread(void)
 		
 		printk("Executing UART command: %s\n", local_cmd);
 		
-		/* Execute the command through the shell */
+		/* Execute the command through the dummy shell backend */
 		if (sh) {
-			shell_execute_cmd(sh, local_cmd);
+			/* Clear any previous output */
+			shell_backend_dummy_clear_output(sh);
+			
+			/* Execute command - output goes to dummy backend buffer */
+			ret = shell_execute_cmd(sh, local_cmd);
+			printk("shell_execute_cmd returned: %d\n", ret);
+			
+			/* Get the captured output */
+			output = shell_backend_dummy_get_output(sh, &output_size);
+			printk("Output size: %d\n", (int)output_size);
+			
+			/* Send output back over UART30 */
+			if (output_size > 0) {
+				uart30_send(output, output_size);
+			} else {
+				/* Fallback: send return code if no output captured */
+				char resp[CMD_BUFFER_SIZE + 16];
+				snprintf(resp, sizeof(resp), "ret=%d: %s\r\n", ret, local_cmd);
+				uart30_send(resp, strlen(resp));
+			}
 		} else {
 			printk("Shell backend not available\n");
+			uart30_send("ERROR: Shell not available\r\n", 28);
 		}
 	}
 }
