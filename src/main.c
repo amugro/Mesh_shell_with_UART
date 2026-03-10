@@ -76,14 +76,48 @@ static uint8_t log_capture_buffer[LOG_CAPTURE_BUF_SIZE];
 static struct ring_buf log_ringbuf;
 static bool log_capture_enabled = false;
 
-/* Send string over UART30 */
+/* Strip ANSI escape sequences from a buffer */
+static size_t strip_ansi_escapes(const char *src, size_t src_len, char *dst, size_t dst_size)
+{
+	size_t dst_pos = 0;
+	size_t i = 0;
+
+	while (i < src_len && dst_pos < dst_size - 1) {
+		if (src[i] == '\e' || src[i] == '\x1b') {
+			/* Start of escape sequence */
+			i++;
+			if (i < src_len && src[i] == '[') {
+				/* CSI sequence: skip until we hit a letter (0x40-0x7E) */
+				i++;
+				while (i < src_len && (src[i] < 0x40 || src[i] > 0x7E)) {
+					i++;
+				}
+				if (i < src_len) {
+					i++; /* Skip the final character */
+				}
+			}
+			/* Skip other escape types */
+		} else {
+			dst[dst_pos++] = src[i++];
+		}
+	}
+	dst[dst_pos] = '\0';
+	return dst_pos;
+}
+
+/* Send string over UART30 (strips ANSI escape codes) */
 static void uart30_send(const char *data, size_t len)
 {
 	if (!uart_dev || !device_is_ready(uart_dev)) {
 		return;
 	}
-	for (size_t i = 0; i < len; i++) {
-		uart_poll_out(uart_dev, data[i]);
+
+	/* Use a static buffer for stripped output */
+	static char clean_buf[512];
+	size_t clean_len = strip_ansi_escapes(data, len, clean_buf, sizeof(clean_buf));
+
+	for (size_t i = 0; i < clean_len; i++) {
+		uart_poll_out(uart_dev, clean_buf[i]);
 	}
 }
 
