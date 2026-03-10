@@ -20,6 +20,10 @@
 /*ADDED INCLUDES*/
 #include <zephyr/settings/settings.h>
 #include <zephyr/drivers/uart.h>
+#include <zephyr/logging/log_backend.h>
+#include <zephyr/logging/log_output.h>
+#include <zephyr/logging/log_ctrl.h>
+#include <zephyr/sys/ring_buffer.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -66,6 +70,12 @@ static K_SEM_DEFINE(cmd_sem, 0, 1);
 
 static const struct device *uart_dev;
 
+/* Ring buffer for capturing log messages */
+#define LOG_CAPTURE_BUF_SIZE 1024
+static uint8_t log_capture_buffer[LOG_CAPTURE_BUF_SIZE];
+static struct ring_buf log_ringbuf;
+static bool log_capture_enabled = false;
+
 /* Send string over UART30 */
 static void uart30_send(const char *data, size_t len)
 {
@@ -76,6 +86,51 @@ static void uart30_send(const char *data, size_t len)
 		uart_poll_out(uart_dev, data[i]);
 	}
 }
+
+/* Custom log output for UART30 capture */
+static int log_capture_output(uint8_t *buf, size_t size, void *ctx)
+{
+	ARG_UNUSED(ctx);
+	if (log_capture_enabled) {
+		ring_buf_put(&log_ringbuf, buf, size);
+	}
+	return size;
+}
+
+static uint8_t log_output_buf[128];
+LOG_OUTPUT_DEFINE(log_capture_out, log_capture_output, log_output_buf, sizeof(log_output_buf));
+
+static void log_capture_process(const struct log_backend *const backend,
+			       union log_msg_generic *msg)
+{
+	uint32_t flags = LOG_OUTPUT_FLAG_LEVEL;
+	log_output_msg_process(&log_capture_out, &msg->log, flags);
+}
+
+static void log_capture_dropped(const struct log_backend *const backend, uint32_t cnt)
+{
+	ARG_UNUSED(backend);
+	ARG_UNUSED(cnt);
+}
+
+static void log_capture_panic(const struct log_backend *const backend)
+{
+	ARG_UNUSED(backend);
+}
+
+static void log_capture_init(const struct log_backend *const backend)
+{
+	ARG_UNUSED(backend);
+}
+
+static const struct log_backend_api log_capture_api = {
+	.process = log_capture_process,
+	.dropped = log_capture_dropped,
+	.panic = log_capture_panic,
+	.init = log_capture_init,
+};
+
+LOG_BACKEND_DEFINE(log_capture_backend, log_capture_api, true, NULL);
 
 
 static void uart_isr(const struct device *dev, void *user_data)
@@ -97,7 +152,7 @@ static void uart_isr(const struct device *dev, void *user_data)
 			if (cmd_buffer_pos > 0) {
 				/* Null-terminate the command */
 				cmd_buffer[cmd_buffer_pos] = '\0';
-				printk("Command complete: '%s' (length: %d)\n", cmd_buffer, cmd_buffer_pos);
+				//printk("Command complete: '%s' (length: %d)\n", cmd_buffer, cmd_buffer_pos);
 				/* Reset position BEFORE giving semaphore to prevent \r\n race */
 				cmd_buffer_pos = 0;
 				/* Signal that a command is ready */
@@ -121,6 +176,11 @@ static void cmd_executor_thread(void)
 	size_t output_size;
 	const char *output;
 	int ret;
+	uint8_t log_data[256];
+	uint32_t log_size;
+	
+	/* Initialize ring buffer for log capture */
+	ring_buf_init(&log_ringbuf, sizeof(log_capture_buffer), log_capture_buffer);
 	
 	/* Wait for shell to be ready */
 	k_sleep(K_SECONDS(2));
@@ -138,29 +198,49 @@ static void cmd_executor_thread(void)
 		/* Clear shared buffer for next command */
 		memset(cmd_buffer, 0, CMD_BUFFER_SIZE);
 		
-		printk("Executing UART command: %s\n", local_cmd);
+		//printk("Executing UART command: %s\n", local_cmd);
 		
 		/* Execute the command through the dummy shell backend */
 		if (sh) {
-			/* Clear any previous output */
+			/* Clear any previous output and enable log capture */
 			shell_backend_dummy_clear_output(sh);
+			ring_buf_reset(&log_ringbuf);
+			log_capture_enabled = true;
 			
 			/* Execute command - output goes to dummy backend buffer */
 			ret = shell_execute_cmd(sh, local_cmd);
-			printk("shell_execute_cmd returned: %d\n", ret);
 			
-			/* Get the captured output */
+			/* Wait briefly for async log messages to arrive */
+			k_sleep(K_MSEC(100));
+			log_capture_enabled = false;
+			
+			//printk("shell_execute_cmd returned: %d\n", ret);
+			
+			/* Get the captured shell output */
 			output = shell_backend_dummy_get_output(sh, &output_size);
-			printk("Output size: %d\n", (int)output_size);
+			//printk("Shell output size: %d\n", (int)output_size);
 			
-			/* Send output back over UART30 */
+
+			
+			/* Send shell output back over UART30 */
 			if (output_size > 0) {
 				uart30_send(output, output_size);
+				uart30_send("\r\n", 2);
 			} else {
-				/* Fallback: send return code if no output captured */
-				char resp[CMD_BUFFER_SIZE + 16];
-				snprintf(resp, sizeof(resp), "ret=%d: %s\r\n", ret, local_cmd);
-				uart30_send(resp, strlen(resp));
+				/* Only send log messages if there was NO shell output */
+				log_size = ring_buf_get(&log_ringbuf, log_data, sizeof(log_data) - 1);
+				if (log_size > 0) {
+					while (log_size > 0) {
+						log_data[log_size] = '\0';
+						uart30_send((char *)log_data, log_size);
+						log_size = ring_buf_get(&log_ringbuf, log_data, sizeof(log_data) - 1);
+					}
+				} else {
+					/* No shell output and no logs - send return code */
+					char resp[64];
+					snprintf(resp, sizeof(resp), "ret=%d\r\n", ret);
+					uart30_send(resp, strlen(resp));
+				}
 			}
 		} else {
 			printk("Shell backend not available\n");
@@ -172,23 +252,23 @@ static void cmd_executor_thread(void)
 K_THREAD_DEFINE(cmd_executor_tid, 2048, cmd_executor_thread, NULL, NULL, NULL, 5, 0, 0);
 
 /* Periodic keepalive to verify UART30 TX */
-static void uart_keepalive_thread(void)
-{
-	int counter = 0;
-	k_sleep(K_SECONDS(5));
-	while (1) {
-		if (uart_dev && device_is_ready(uart_dev)) {
-			char msg[48];
-			snprintf(msg, sizeof(msg), "[UART30 alive: %d]\r\n", counter++);
-			for (int i = 0; msg[i]; i++) {
-				uart_poll_out(uart_dev, msg[i]);
-			}
-		}
-		k_sleep(K_SECONDS(10));
-	}
-}
+// static void uart_keepalive_thread(void)
+// {
+// 	int counter = 0;
+// 	k_sleep(K_SECONDS(5));
+// 	while (1) {
+// 		if (uart_dev && device_is_ready(uart_dev)) {
+// 			char msg[48];
+// 			snprintf(msg, sizeof(msg), "[UART30 alive: %d]\r\n", counter++);
+// 			for (int i = 0; msg[i]; i++) {
+// 				uart_poll_out(uart_dev, msg[i]);
+// 			}
+// 		}
+// 		k_sleep(K_SECONDS(10));
+// 	}
+// }
 
-K_THREAD_DEFINE(keepalive_tid, 512, uart_keepalive_thread, NULL, NULL, NULL, 7, 0, 0);
+// K_THREAD_DEFINE(keepalive_tid, 512, uart_keepalive_thread, NULL, NULL, NULL, 7, 0, 0);
 
 static int uart_cmd_init(void)
 {
@@ -213,23 +293,7 @@ static int uart_cmd_init(void)
 
 	uart_irq_rx_enable(uart_dev);
 	
-	printk("UART command reception initialized on UART30\n");
-	printk("TX: P0.0, RX: P0.1, 115200 baud\n");
-	
-	/* Send test pattern on UART30 to verify TX and help debug connection */
-	const char *test_msg = "\r\n=== UART30 Ready ===\r\n";
-	const char *test_msg2 = "Send commands here\r\n";
-	const char *test_pattern = "Test: 0123456789ABCDEF\r\n\r\n";
-	
-	for (int i = 0; test_msg[i] != '\0'; i++) {
-		uart_poll_out(uart_dev, test_msg[i]);
-	}
-	for (int i = 0; test_msg2[i] != '\0'; i++) {
-		uart_poll_out(uart_dev, test_msg2[i]);
-	}
-	for (int i = 0; test_pattern[i] != '\0'; i++) {
-		uart_poll_out(uart_dev, test_pattern[i]);
-	}
+
 	
 	return 0;
 }
