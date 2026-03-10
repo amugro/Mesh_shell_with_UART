@@ -1,6 +1,22 @@
+cmake:
+  board:
+    name: 'nrf54l15dk'
+    path:
+     - 'C:/ncs/v3.2.1/zephyr/boards/nordic/nrf54l15dk'
+    qualifiers: 'nrf54l15/cpuapp/ns'
+    revision: ''
+  images:
+   - name: 'mesh_shell'
+     source-dir: 'C:/myfw/mesh_shell'
+     type: 'MAIN'
+  kconfig:
+    files:
+     - 'C:/myfw/mesh_shell/build/_sysbuild/empty.conf'
+     - 'c:/myfw/mesh_shell/sysbuild.conf'
+    user-files:
+     - 'c:/myfw/mesh_shell/sysbuild.conf'
+version: '0.1.0'
 west:
-  command: C:\ncs\toolchains\66cdf9b75e\opt\bin\Scripts\west build --build-dir c:/myfw/mesh_shell/build
-    c:/myfw/mesh_shell --pristine --board nrf54l15dk/nrf54l15/cpuapp/ns -- -DDEBUG_THREAD_INFO=Off
-    -Dmesh_shell_DEBUG_THREAD_INFO=Off
-  topdir: c:\ncs\v3.2.1
-  version: 1.4.0
+  command: 'C:\ncs\toolchains\66cdf9b75e\opt\bin\Scripts\west build --build-dir c:/myfw/mesh_shell/build c:/myfw/mesh_shell --pristine --board nrf54l15dk/nrf54l15/cpuapp/ns -- -DCONFIG_DEBUG_THREAD_INFO=y'
+  topdir: 'c:\ncs\v3.2.1'
+  version: '1.4.0'

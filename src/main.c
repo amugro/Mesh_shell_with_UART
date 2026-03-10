@@ -63,7 +63,7 @@ static struct bt_mesh_brg_cfg_cli brg_cfg_cli;
 #endif
 
 /* UART Command Reception */
-#define CMD_BUFFER_SIZE 256
+#define CMD_BUFFER_SIZE 512
 static char cmd_buffer[CMD_BUFFER_SIZE];
 static int cmd_buffer_pos = 0;
 static K_SEM_DEFINE(cmd_sem, 0, 1);
@@ -71,7 +71,7 @@ static K_SEM_DEFINE(cmd_sem, 0, 1);
 static const struct device *uart_dev;
 
 /* Ring buffer for capturing log messages */
-#define LOG_CAPTURE_BUF_SIZE 1024
+#define LOG_CAPTURE_BUF_SIZE 256
 static uint8_t log_capture_buffer[LOG_CAPTURE_BUF_SIZE];
 static struct ring_buf log_ringbuf;
 static bool log_capture_enabled = false;
@@ -152,7 +152,7 @@ static void uart_isr(const struct device *dev, void *user_data)
 			if (cmd_buffer_pos > 0) {
 				/* Null-terminate the command */
 				cmd_buffer[cmd_buffer_pos] = '\0';
-				//printk("Command complete: '%s' (length: %d)\n", cmd_buffer, cmd_buffer_pos);
+				printk("Command complete: '%s' (length: %d)\n", cmd_buffer, cmd_buffer_pos);
 				/* Reset position BEFORE giving semaphore to prevent \r\n race */
 				cmd_buffer_pos = 0;
 				/* Signal that a command is ready */
@@ -183,7 +183,7 @@ static void cmd_executor_thread(void)
 	ring_buf_init(&log_ringbuf, sizeof(log_capture_buffer), log_capture_buffer);
 	
 	/* Wait for shell to be ready */
-	k_sleep(K_SECONDS(2));
+	k_sleep(K_SECONDS(1));
 	
 	printk("cmd_executor_thread: dummy shell ptr = %p\n", sh);
 	
@@ -198,7 +198,7 @@ static void cmd_executor_thread(void)
 		/* Clear shared buffer for next command */
 		memset(cmd_buffer, 0, CMD_BUFFER_SIZE);
 		
-		//printk("Executing UART command: %s\n", local_cmd);
+		printk("Executing UART command: %s\n", local_cmd);
 		
 		/* Execute the command through the dummy shell backend */
 		if (sh) {
@@ -214,13 +214,11 @@ static void cmd_executor_thread(void)
 			k_sleep(K_MSEC(100));
 			log_capture_enabled = false;
 			
-			//printk("shell_execute_cmd returned: %d\n", ret);
+			printk("shell_execute_cmd returned: %d\n", ret);
 			
 			/* Get the captured shell output */
 			output = shell_backend_dummy_get_output(sh, &output_size);
-			//printk("Shell output size: %d\n", (int)output_size);
-			
-
+			printk("Shell output size: %d\n", (int)output_size);
 			
 			/* Send shell output back over UART30 */
 			if (output_size > 0) {
@@ -293,6 +291,8 @@ static int uart_cmd_init(void)
 
 	uart_irq_rx_enable(uart_dev);
 	
+	printk("UART command reception initialized on UART30\n");
+	printk("TX: P0.0, RX: P0.1, 115200 baud\n");
 
 	
 	return 0;
