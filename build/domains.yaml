@@ -1,7 +1,7 @@
-default: mesh_shell
-build_dir: C:/myfw/mesh_shell/build
+default: Mesh_shell_with_UART
+build_dir: C:/myfw/mesh_test/Mesh_shell_with_UART/build
 domains:
-  - name: mesh_shell
-    build_dir: C:/myfw/mesh_shell/build/mesh_shell
+  - name: Mesh_shell_with_UART
+    build_dir: C:/myfw/mesh_test/Mesh_shell_with_UART/build/Mesh_shell_with_UART
 flash_order:
-  - mesh_shell
+  - Mesh_shell_with_UART

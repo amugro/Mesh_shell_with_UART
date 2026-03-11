@@ -1,0 +1,43 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "C:/myfw/mesh_test/Mesh_shell_with_UART/build/_sysbuild/sysbuild/images/CMakeFiles/Mesh_shell_with_UART"
+		},
+		{
+			"file" : "C:/myfw/mesh_test/Mesh_shell_with_UART/build/_sysbuild/sysbuild/images/CMakeFiles/Mesh_shell_with_UART.rule"
+		},
+		{
+			"file" : "C:/myfw/mesh_test/Mesh_shell_with_UART/build/_sysbuild/sysbuild/images/CMakeFiles/Mesh_shell_with_UART-complete.rule"
+		},
+		{
+			"file" : "C:/myfw/mesh_test/Mesh_shell_with_UART/build/_sysbuild/sysbuild/images/Mesh_shell_with_UART-prefix/src/Mesh_shell_with_UART-stamp/Mesh_shell_with_UART-build.rule"
+		},
+		{
+			"file" : "C:/myfw/mesh_test/Mesh_shell_with_UART/build/_sysbuild/sysbuild/images/Mesh_shell_with_UART-prefix/src/Mesh_shell_with_UART-stamp/Mesh_shell_with_UART-configure.rule"
+		},
+		{
+			"file" : "C:/myfw/mesh_test/Mesh_shell_with_UART/build/_sysbuild/sysbuild/images/Mesh_shell_with_UART-prefix/src/Mesh_shell_with_UART-stamp/Mesh_shell_with_UART-download.rule"
+		},
+		{
+			"file" : "C:/myfw/mesh_test/Mesh_shell_with_UART/build/_sysbuild/sysbuild/images/Mesh_shell_with_UART-prefix/src/Mesh_shell_with_UART-stamp/Mesh_shell_with_UART-install.rule"
+		},
+		{
+			"file" : "C:/myfw/mesh_test/Mesh_shell_with_UART/build/_sysbuild/sysbuild/images/Mesh_shell_with_UART-prefix/src/Mesh_shell_with_UART-stamp/Mesh_shell_with_UART-mkdir.rule"
+		},
+		{
+			"file" : "C:/myfw/mesh_test/Mesh_shell_with_UART/build/_sysbuild/sysbuild/images/Mesh_shell_with_UART-prefix/src/Mesh_shell_with_UART-stamp/Mesh_shell_with_UART-patch.rule"
+		},
+		{
+			"file" : "C:/myfw/mesh_test/Mesh_shell_with_UART/build/_sysbuild/sysbuild/images/Mesh_shell_with_UART-prefix/src/Mesh_shell_with_UART-stamp/Mesh_shell_with_UART-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"Mesh_shell_with_UART"
+		],
+		"name" : "Mesh_shell_with_UART"
+	}
+}

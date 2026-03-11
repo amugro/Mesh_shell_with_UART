@@ -1,8 +1,8 @@
-C:\myfw\mesh_shell\build\Kconfig\Kconfig.sysbuild.modules
-C:\myfw\mesh_shell\build\Kconfig\boards\Kconfig.nrf54l15dk
-C:\myfw\mesh_shell\build\Kconfig\boards\Kconfig.sysbuild
-C:\myfw\mesh_shell\build\Kconfig\soc\Kconfig.soc
-C:\myfw\mesh_shell\build\Kconfig\soc\Kconfig.sysbuild
+C:\myfw\mesh_test\Mesh_shell_with_UART\build\Kconfig\Kconfig.sysbuild.modules
+C:\myfw\mesh_test\Mesh_shell_with_UART\build\Kconfig\boards\Kconfig.nrf54l15dk
+C:\myfw\mesh_test\Mesh_shell_with_UART\build\Kconfig\boards\Kconfig.sysbuild
+C:\myfw\mesh_test\Mesh_shell_with_UART\build\Kconfig\soc\Kconfig.soc
+C:\myfw\mesh_test\Mesh_shell_with_UART\build\Kconfig\soc\Kconfig.sysbuild
 C:\ncs\v3.2.1\nrf\soc\nordic\Kconfig.soc
 C:\ncs\v3.2.1\nrf\soc\nordic\Kconfig.sysbuild
 C:\ncs\v3.2.1\nrf\soc\nordic\common\vpr\Kconfig.sysbuild

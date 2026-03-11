@@ -1,5 +1,5 @@
 @echo off
-cd /D C:\myfw\mesh_shell\build\_sysbuild || (set FAIL_LINE=2& goto :ABORT)
+cd /D C:\myfw\mesh_test\Mesh_shell_with_UART\build\_sysbuild || (set FAIL_LINE=2& goto :ABORT)
 C:\ncs\toolchains\66cdf9b75e\opt\bin\cmake.exe -E echo bt-ll-sw-split || (set FAIL_LINE=3& goto :ABORT)
 C:\ncs\toolchains\66cdf9b75e\opt\bin\cmake.exe -E echo cdc-acm-console || (set FAIL_LINE=4& goto :ABORT)
 C:\ncs\toolchains\66cdf9b75e\opt\bin\cmake.exe -E echo ci-shell || (set FAIL_LINE=5& goto :ABORT)

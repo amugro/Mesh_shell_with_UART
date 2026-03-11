@@ -34,6 +34,6 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("C:/myfw/mesh_shell/build/_sysbuild/sysbuild/images/cmake_install.cmake")
+  include("C:/myfw/mesh_test/Mesh_shell_with_UART/build/_sysbuild/sysbuild/images/cmake_install.cmake")
 endif()
 

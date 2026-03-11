@@ -1,0 +1,13 @@
+# Target labels
+ Mesh_shell_with_UART
+# Source files and their labels
+C:/myfw/mesh_test/Mesh_shell_with_UART/build/_sysbuild/sysbuild/images/CMakeFiles/Mesh_shell_with_UART
+C:/myfw/mesh_test/Mesh_shell_with_UART/build/_sysbuild/sysbuild/images/CMakeFiles/Mesh_shell_with_UART.rule
+C:/myfw/mesh_test/Mesh_shell_with_UART/build/_sysbuild/sysbuild/images/CMakeFiles/Mesh_shell_with_UART-complete.rule
+C:/myfw/mesh_test/Mesh_shell_with_UART/build/_sysbuild/sysbuild/images/Mesh_shell_with_UART-prefix/src/Mesh_shell_with_UART-stamp/Mesh_shell_with_UART-build.rule
+C:/myfw/mesh_test/Mesh_shell_with_UART/build/_sysbuild/sysbuild/images/Mesh_shell_with_UART-prefix/src/Mesh_shell_with_UART-stamp/Mesh_shell_with_UART-configure.rule
+C:/myfw/mesh_test/Mesh_shell_with_UART/build/_sysbuild/sysbuild/images/Mesh_shell_with_UART-prefix/src/Mesh_shell_with_UART-stamp/Mesh_shell_with_UART-download.rule
+C:/myfw/mesh_test/Mesh_shell_with_UART/build/_sysbuild/sysbuild/images/Mesh_shell_with_UART-prefix/src/Mesh_shell_with_UART-stamp/Mesh_shell_with_UART-install.rule
+C:/myfw/mesh_test/Mesh_shell_with_UART/build/_sysbuild/sysbuild/images/Mesh_shell_with_UART-prefix/src/Mesh_shell_with_UART-stamp/Mesh_shell_with_UART-mkdir.rule
+C:/myfw/mesh_test/Mesh_shell_with_UART/build/_sysbuild/sysbuild/images/Mesh_shell_with_UART-prefix/src/Mesh_shell_with_UART-stamp/Mesh_shell_with_UART-patch.rule
+C:/myfw/mesh_test/Mesh_shell_with_UART/build/_sysbuild/sysbuild/images/Mesh_shell_with_UART-prefix/src/Mesh_shell_with_UART-stamp/Mesh_shell_with_UART-update.rule
