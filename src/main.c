@@ -76,15 +76,15 @@ static uint8_t log_capture_buffer[LOG_CAPTURE_BUF_SIZE];
 static struct ring_buf log_ringbuf;
 static bool log_capture_enabled = false;
 
-/* Strip ANSI escape sequences from a buffer */
+/* Strip ANSI escape sequences and shell prompt from a buffer */
 static size_t strip_ansi_escapes(const char *src, size_t src_len, char *dst, size_t dst_size)
 {
 	size_t dst_pos = 0;
 	size_t i = 0;
 
 	while (i < src_len && dst_pos < dst_size - 1) {
-		if (src[i] == '\e' || src[i] == '\x1b') {
-			/* Start of escape sequence */
+		/* Check for ESC character (0x1B) */
+		if (src[i] == 0x1b) {
 			i++;
 			if (i < src_len && src[i] == '[') {
 				/* CSI sequence: skip until we hit a letter (0x40-0x7E) */
@@ -96,7 +96,13 @@ static size_t strip_ansi_escapes(const char *src, size_t src_len, char *dst, siz
 					i++; /* Skip the final character */
 				}
 			}
-			/* Skip other escape types */
+			/* Other escape types - just skip the ESC */
+		} else if (src[i] == '~' && i + 2 < src_len && src[i+1] == '$' && src[i+2] == ' ') {
+			/* Skip shell prompt "~$ " */
+			i += 3;
+		} else if (src[i] == '\r') {
+			/* Skip carriage return */
+			i++;
 		} else {
 			dst[dst_pos++] = src[i++];
 		}
@@ -283,24 +289,6 @@ static void cmd_executor_thread(void)
 
 K_THREAD_DEFINE(cmd_executor_tid, 2048, cmd_executor_thread, NULL, NULL, NULL, 5, 0, 0);
 
-/* Periodic keepalive to verify UART30 TX */
-// static void uart_keepalive_thread(void)
-// {
-// 	int counter = 0;
-// 	k_sleep(K_SECONDS(5));
-// 	while (1) {
-// 		if (uart_dev && device_is_ready(uart_dev)) {
-// 			char msg[48];
-// 			snprintf(msg, sizeof(msg), "[UART30 alive: %d]\r\n", counter++);
-// 			for (int i = 0; msg[i]; i++) {
-// 				uart_poll_out(uart_dev, msg[i]);
-// 			}
-// 		}
-// 		k_sleep(K_SECONDS(10));
-// 	}
-// }
-
-// K_THREAD_DEFINE(keepalive_tid, 512, uart_keepalive_thread, NULL, NULL, NULL, 7, 0, 0);
 
 static int uart_cmd_init(void)
 {
